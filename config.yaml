@@ -1,0 +1,3 @@
+http_server:
+  address: ":8081"
+  timeout: "2s"

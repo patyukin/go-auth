@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
@@ -43,22 +42,24 @@ func New(dbPath string) (SQLLiteStorage, error) {
 	return SQLLiteStorage{db: db}, nil
 }
 
-func (s *SQLLiteStorage) RegisterUser(ctx context.Context, u UserAccount) (UserAccount, error) {
+// should be different layer
+// db shouldnt know about bcrypt
+func (s *SQLLiteStorage) RegisterUser(ctx context.Context, u UserAccount) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return UserAccount{}, err
+		return err
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, `INSERT INTO users(username, password) VALUES(?,?)`)
 	if err != nil {
-		return UserAccount{}, err
+		return err
 	}
 
 	if _, err := stmt.Exec(u.Username, hashedPassword); err != nil {
-		return UserAccount{}, err
+		return err
 	}
 
-	return UserAccount{}, nil
+	return nil
 }
 
 func (s *SQLLiteStorage) Login(ctx context.Context, username, password string) (UserAccount, error) {
@@ -67,13 +68,15 @@ func (s *SQLLiteStorage) Login(ctx context.Context, username, password string) (
 		return UserAccount{}, err
 	}
 
-	pswdFromDB := ""
+	var pswdFromDB string
 
 	if err := stmt.QueryRow(username).Scan(&pswdFromDB); err != nil {
 		return UserAccount{}, err
 	}
 
-	log.Println(pswdFromDB)
+	// log.Println(pswdFromDB)
 
-	return UserAccount{}, nil
+	return UserAccount{
+		Username: username,
+	}, nil
 }

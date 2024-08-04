@@ -1,15 +1,15 @@
-POST http://localhost:8080/login
+POST http://localhost:8081/login
 
 {
-    "email":"qq@qq.qq",
-    "password":"123"
+    "username":"qq@qq.qq",
+    "password":"1231"
 }
 
 ### 
-POST http://localhost:8080/register
+POST http://localhost:8081/register
 
 {
-    "email":"qq@qq.qq",
+    "username":"qq@qq.qq",
     "password":"123"
 }
 

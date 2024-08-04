@@ -1,19 +1,13 @@
-package storage
+package repository
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
+	"github.com/bogatyr285/auth-go/internal/auth/entity"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/bcrypt"
 )
-
-// TODO to models package
-type UserAccount struct {
-	Username string
-	Password string
-}
 
 type SQLLiteStorage struct {
 	db *sql.DB
@@ -28,7 +22,8 @@ func New(dbPath string) (SQLLiteStorage, error) {
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY,
 		username text not null,
-		password text not null);
+		password text not null,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 	create index if not exists idx_username ON users(username);
 	`)
 	if err != nil {
@@ -42,41 +37,37 @@ func New(dbPath string) (SQLLiteStorage, error) {
 	return SQLLiteStorage{db: db}, nil
 }
 
-// should be different layer
-// db shouldnt know about bcrypt
-func (s *SQLLiteStorage) RegisterUser(ctx context.Context, u UserAccount) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
+func (s *SQLLiteStorage) Close() error {
+	return s.db.Close()
+}
 
+func (s *SQLLiteStorage) RegisterUser(ctx context.Context, u entity.UserAccount) error {
 	stmt, err := s.db.PrepareContext(ctx, `INSERT INTO users(username, password) VALUES(?,?)`)
 	if err != nil {
 		return err
 	}
 
-	if _, err := stmt.Exec(u.Username, hashedPassword); err != nil {
+	if _, err := stmt.Exec(u.Username, u.Password); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *SQLLiteStorage) Login(ctx context.Context, username, password string) (UserAccount, error) {
+func (s *SQLLiteStorage) FindUserByEmail(ctx context.Context, username string) (entity.UserAccount, error) {
 	stmt, err := s.db.PrepareContext(ctx, `SELECT password FROM users WHERE username = ?`)
 	if err != nil {
-		return UserAccount{}, err
+		return entity.UserAccount{}, err
 	}
 
 	var pswdFromDB string
 
 	if err := stmt.QueryRow(username).Scan(&pswdFromDB); err != nil {
-		return UserAccount{}, err
+		return entity.UserAccount{}, err
 	}
 
-	// log.Println(pswdFromDB)
-
-	return UserAccount{
+	return entity.UserAccount{
 		Username: username,
+		Password: pswdFromDB,
 	}, nil
 }

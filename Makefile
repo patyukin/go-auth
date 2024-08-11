@@ -11,3 +11,10 @@ LDFLAGS += -X ${PROJECT_PKG}/internal/buildinfo.version=${VERSION} -X ${PROJECT_
 
 build:
 	go build ${GOARGS} -tags "${GOTAGS}" -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/${BINARY_NAME} ${BUILD_PACKAGE}
+
+proto:
+	protoc \
+	--go_out=./pkg/server/grpc/auth --go_opt=paths=source_relative \
+	--go-grpc_out=./pkg/server/grpc/auth --go-grpc_opt=paths=source_relative \
+	-I ./api/grpc \
+	./api/grpc/*.proto

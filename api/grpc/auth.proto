@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = ".;auth";
+
+service AuthService {
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+  rpc UserInfo(UserInfoRequest) returns (UserInfoResponse);
+}
+
+// example with same name
+enum Gender {
+  GENDER_UNKNOWN = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+  GENDER_OTHER = 3;
+}
+
+enum UserRole {
+  USER_ROLE_UNKNOWN = 0;
+  USER_ROLE_ADMIN = 1;
+  USER_ROLE_USER = 2;
+  USER_ROLE_MODERATOR = 3;
+}
+
+message User {
+    message Address {
+        string street = 1;
+        string city = 2;
+        string state = 3;
+        string zipcode = 4;
+    }
+  string user_id = 1;
+  string name = 2;
+  Gender gender = 3;
+  UserRole role = 4;
+  string email = 5;
+  Address address = 6;
+  
+  oneof contact_method {
+    string phone_number = 7;
+    string email_contact = 8;
+  }
+}
+
+// Request and Response messages for user registration
+message RegisterUserRequest {
+  User user = 1;
+  string password = 2;
+}
+
+message RegisterUserResponse {
+  string message = 1;
+  string user_id = 2;
+}
+
+message LoginUserRequest {
+  oneof login_method {
+    string email = 1;
+    string phone_number = 2;
+  }
+  string password = 3;
+}
+
+message LoginUserResponse {
+  string token = 1;
+}
+
+
+message UserInfoRequest{
+
+}
+
+message UserInfoResponse{
+    User user = 1;
+}

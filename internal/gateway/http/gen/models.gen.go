@@ -50,6 +50,8 @@ type LoginUserResponse struct {
 
 // RegisterUserRequest defines model for RegisterUserRequest.
 type RegisterUserRequest struct {
+	Age *int `json:"age,omitempty"`
+
 	// Password Password of the new user
 	Password string `json:"password"`
 

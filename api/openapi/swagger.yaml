@@ -98,6 +98,8 @@ components:
         password:
           type: string
           description: Password of the new user
+        age:
+          type: integer
       required:
         - username
         - password
@@ -178,4 +180,3 @@ components:
           description: Description of the error
       required:
         - error
-        

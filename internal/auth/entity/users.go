@@ -6,13 +6,3 @@ type UserAccount struct {
 	Password  string
 	CreatedAt string
 }
-
-type RegisterUserRequest struct {
-	Username string
-	Password string
-}
-
-type LoginUserRequest struct {
-	Username string
-	Password string
-}

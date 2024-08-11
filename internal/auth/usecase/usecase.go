@@ -48,7 +48,9 @@ func NewUseCase(
 func (u AuthUseCase) PostLogin(ctx context.Context, request gen.PostLoginRequestObject) (gen.PostLoginResponseObject, error) {
 	user, err := u.ur.FindUserByEmail(ctx, request.Body.Username)
 	if err != nil {
-		return gen.PostLogin500JSONResponse{}, nil
+		return gen.PostLogin500JSONResponse{
+			Error: err.Error(),
+		}, nil
 	}
 
 	if !u.cp.ComparePasswords(user.Password, request.Body.Password) {

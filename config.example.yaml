@@ -1,0 +1,10 @@
+http_server:
+  address: ":8081"
+  timeout: "2s"
+grpc_server:
+  address: ":9090"
+jwt:
+  issuer: auth-service
+  expires_in: 12h
+  public_key_path: jwtRS256.key.pub   
+  private_key_path: jwtRS256.key

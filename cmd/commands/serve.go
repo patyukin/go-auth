@@ -13,9 +13,10 @@ import (
 	"github.com/bogatyr285/auth-go/internal/auth/repository"
 	"github.com/bogatyr285/auth-go/internal/auth/usecase"
 	"github.com/bogatyr285/auth-go/internal/buildinfo"
+	"github.com/bogatyr285/auth-go/internal/gateway/grpc/auth"
 	"github.com/bogatyr285/auth-go/internal/gateway/http/gen"
-	"github.com/bogatyr285/auth-go/internal/pkg/crypto"
-	"github.com/bogatyr285/auth-go/internal/pkg/jwt"
+	"github.com/bogatyr285/auth-go/pkg/crypto"
+	"github.com/bogatyr285/auth-go/pkg/jwt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/spf13/cobra"
@@ -73,6 +74,17 @@ func NewServeCmd() *cobra.Command {
 				Handler:      gen.HandlerFromMux(gen.NewStrictHandler(useCase, nil), router),
 			}
 
+			authGRPCHandlers := auth.NewAuthHandlers()
+			grpcServer, err := auth.NewGRPCServer(cfg.GRPCServer.Address, authGRPCHandlers, log)
+			if err != nil {
+				return err
+			}
+
+			grpcCloser, err := grpcServer.Run()
+			if err != nil {
+				return err
+			}
+
 			go func() {
 				if err := httpServer.ListenAndServe(); err != nil {
 					log.Error("ListenAndServe", slog.Any("err", err))
@@ -89,6 +101,8 @@ func NewServeCmd() *cobra.Command {
 			if err := storage.Close(); err != nil {
 				log.Error("storage.Close", slog.Any("err", err))
 			}
+
+			grpcCloser()
 
 			return nil
 		},

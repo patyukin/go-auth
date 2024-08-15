@@ -67,4 +67,4 @@ jobs:
               -v ./jwtED.key.pub:/app/jwtED.key.pub \
               -v ./config.yaml:/app/config.yaml \
               --name $CONTAINER_NAME \
-              -t $REGISTRY/$IMAGE_NAME:$TAG_NAME \
+              -t $REGISTRY/$IMAGE_NAME:$TAG_NAME

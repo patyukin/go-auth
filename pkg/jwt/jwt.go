@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"crypto/rsa"
+	"crypto/ed25519"
 	"fmt"
 	"time"
 
@@ -51,9 +51,9 @@ func (j *JWTManager) IssueToken(userID string) (string, error) {
 		"exp": time.Now().Add(j.expiresIn).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 
-	signed, err := token.SignedString(j.privateKey.(*rsa.PrivateKey))
+	signed, err := token.SignedString(j.privateKey.(ed25519.PrivateKey))
 	if err != nil {
 		return "", fmt.Errorf("%w: %s", ErrSigning, err)
 	}
@@ -62,7 +62,7 @@ func (j *JWTManager) IssueToken(userID string) (string, error) {
 
 func (j *JWTManager) VerifyToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return nil, ErrValidation
 		}
 		return j.publicKey, nil

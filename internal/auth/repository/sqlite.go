@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"time"
@@ -41,7 +42,7 @@ func New(dbPath string) (SQLLiteStorage, error) {
 	stmt, err = db.Prepare(`
 		CREATE TABLE IF NOT EXISTS tokens (
 			id INTEGER PRIMARY KEY,
-			user_id INT NOT NULL,
+			user_id INT NOT NULL UNIQUE,
 			token text  NOT NULL UNIQUE,
 			created_at TIMESTAMP NOT NULL,
 			expired_at TIMESTAMP NOT NULL,
@@ -176,4 +177,24 @@ func (s *SQLLiteStorage) ExistsUserByUsername(ctx context.Context, username stri
 	}
 
 	return true, nil
+}
+
+func (s *SQLLiteStorage) ExistsTokenByUserID(ctx context.Context, userID int) (string, error) {
+	query := `SELECT token FROM tokens WHERE user_id = ?`
+
+	row := s.db.QueryRowContext(ctx, query, userID)
+	if row.Err() != nil {
+		return "", fmt.Errorf("failed to check username: %s", row.Err())
+	}
+
+	var token string
+	if err := row.Scan(&token); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
+
+		return "", fmt.Errorf("failed to check username: %s", err)
+	}
+
+	return token, nil
 }

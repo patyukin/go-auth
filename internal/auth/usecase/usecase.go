@@ -21,6 +21,7 @@ type UserRepository interface {
 	ExistsToken(ctx context.Context, token string) (bool, error)
 	SelectUserByToken(ctx context.Context, token string) (entity.UserAccount, error)
 	ExistsUserByUsername(ctx context.Context, username string) (bool, error)
+	ExistsTokenByUserID(ctx context.Context, userID int) (string, error)
 }
 
 type CryptoPassword interface {
@@ -107,14 +108,24 @@ func (u AuthUseCase) PostLogin(ctx context.Context, request gen.PostLoginRequest
 		return gen.PostLogin500JSONResponse{}, err
 	}
 
-	refreshToken, err := u.ur.GenerateUserToken(ctx, user.ID)
+	refreshToken, err := u.ur.ExistsTokenByUserID(ctx, user.ID)
 	if err != nil {
 		return gen.PostLogin500JSONResponse{}, err
 	}
 
+	if refreshToken == "" {
+		var rt uuid.UUID
+		rt, err = u.ur.GenerateUserToken(ctx, user.ID)
+		if err != nil {
+			return gen.PostLogin500JSONResponse{}, err
+		}
+
+		refreshToken = rt.String()
+	}
+
 	return gen.PostLogin200JSONResponse{
 		AccessToken:  token,
-		RefreshToken: refreshToken.String(),
+		RefreshToken: refreshToken,
 	}, nil
 }
 
@@ -152,6 +163,11 @@ func (u AuthUseCase) GetBuildinfo(ctx context.Context, request gen.GetBuildinfoR
 
 func (u AuthUseCase) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login" || r.URL.Path == "/register" || r.URL.Path == "/build" || r.URL.Path == "/refresh" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
@@ -175,7 +191,7 @@ func (u AuthUseCase) AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		claims := verifyToken.Claims.(jwt.MapClaims)
-		exists, err := u.ur.ExistsUserByUsername(r.Context(), claims["username"].(string))
+		exists, err := u.ur.ExistsUserByUsername(r.Context(), claims["sub"].(string))
 		if err != nil {
 			log.Errorf("Failed to verify token: %s", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

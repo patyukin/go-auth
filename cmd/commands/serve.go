@@ -65,9 +65,7 @@ func NewServeCmd() *cobra.Command {
 			router.Use(middleware.Logger)
 			router.Use(middleware.RequestID)
 			router.Use(middleware.Recoverer)
-			router.Route("/users", func(r chi.Router) {
-				router.Use(useCase.AuthMiddleware)
-			})
+			router.Use(useCase.AuthMiddleware)
 
 			httpServer := http.Server{
 				Addr:         cfg.HTTPServer.Address,

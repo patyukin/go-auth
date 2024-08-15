@@ -1,4 +1,4 @@
-POST http://localhost:8081/login
+POST http://localhost:1234/login
 
 {
     "username":"qq@qq.qq",
@@ -6,7 +6,7 @@ POST http://localhost:8081/login
 }
 
 ### 
-POST http://localhost:8081/register
+POST http://localhost:1234/register
 
 {
     "username":"qq@qq.qq",
@@ -15,4 +15,4 @@ POST http://localhost:8081/register
 
 #### 
 
-GET http://localhost:8081/build
+GET http://localhost:1234/build

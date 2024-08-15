@@ -65,6 +65,6 @@ jobs:
               -v ./db.sqlite:/app/db.sqlite \
               -v ./jwtED.key:/app/jwtED.key \
               -v ./jwtED.key.pub:/app/jwtED.key.pub \
-              -v ./config.yaml:/app/config.yaml
+              -v ./config.yaml:/app/config.yaml \
               --name $CONTAINER_NAME \
               -t $REGISTRY/$IMAGE_NAME:$TAG_NAME \

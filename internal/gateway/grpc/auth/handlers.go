@@ -17,7 +17,7 @@ func NewAuthHandlers() *AuthHandlers {
 	return &AuthHandlers{}
 }
 
-func (h *AuthHandlers) RegisterUser(context.Context, *authpb.RegisterUserRequest) (*authpb.RegisterUserResponse, error) {
+func (h *AuthHandlers) RegisterUser(ctx context.Context, req *authpb.RegisterUserRequest) (*authpb.RegisterUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 

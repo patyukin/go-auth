@@ -3,12 +3,16 @@ package auth
 import (
 	"log/slog"
 	"net"
+	"runtime/debug"
 	"time"
 
 	authpb "github.com/bogatyr285/auth-go/pkg/server/grpc/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -37,9 +41,19 @@ func NewGRPCServer(
 	if err != nil {
 		return nil, err
 	}
-	opts := []grpc.ServerOption{}
+	grpcPanicRecoveryHandler := func(p any) (err error) {
+		logger.Error("recovered from panic", slog.Any("stack", string(debug.Stack())))
+		return status.Errorf(codes.Internal, "%s", p)
+	}
 
-	grpcSrv := grpc.NewServer(opts...)
+	grpcSrv := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+		),
+		grpc.ChainStreamInterceptor(
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+		),
+	)
 	authpb.RegisterAuthServiceServer(grpcSrv, authHadndlers)
 
 	// register health check service

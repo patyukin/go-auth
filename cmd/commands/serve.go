@@ -84,6 +84,14 @@ func NewServeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			grpcGw, err := auth.NewGateway(ctx, cfg.GRPCServer.Address, ":9091", log)
+			if err != nil {
+				return err
+			}
+			grpcGwCloser, err := grpcGw.Start()
+			if err != nil {
+				return err
+			}
 
 			go func() {
 				if err := httpServer.ListenAndServe(); err != nil {
@@ -103,6 +111,7 @@ func NewServeCmd() *cobra.Command {
 			}
 
 			grpcCloser()
+			grpcGwCloser()
 
 			return nil
 		},

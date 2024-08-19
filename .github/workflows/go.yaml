@@ -61,7 +61,7 @@ jobs:
 
             # Run a new container from a new image
             docker run -d \
-              -p 1234:1234 \
+              -p 1233:1233 \
               -v ./db.sqlite:/app/db.sqlite \
               -v ./jwtED.key:/app/jwtED.key \
               -v ./jwtED.key.pub:/app/jwtED.key.pub \

@@ -57,7 +57,7 @@ jobs:
             docker rm $CONTAINER_NAME
 
             # cd to home directory
-            cd ~/
+            cd ~/go-auth
 
             # Run a new container from a new image
             docker run -d \

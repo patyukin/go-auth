@@ -74,7 +74,7 @@ func NewServeCmd() *cobra.Command {
 				Handler:      gen.HandlerFromMux(gen.NewStrictHandler(useCase, nil), router),
 			}
 
-			authGRPCHandlers := auth.NewAuthHandlers()
+			authGRPCHandlers := auth.NewAuthHandlers(&storage, passwordHasher, jwtManager, buildinfo.New())
 			grpcServer, err := auth.NewGRPCServer(cfg.GRPCServer.Address, authGRPCHandlers, log)
 			if err != nil {
 				return err

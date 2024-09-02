@@ -74,13 +74,21 @@ func NewServeCmd() *cobra.Command {
 				Handler:      gen.HandlerFromMux(gen.NewStrictHandler(useCase, nil), router),
 			}
 
-			authGRPCHandlers := auth.NewAuthHandlers()
+			authGRPCHandlers := auth.NewAuthHandlers(&storage, passwordHasher, jwtManager, buildinfo.New())
 			grpcServer, err := auth.NewGRPCServer(cfg.GRPCServer.Address, authGRPCHandlers, log)
 			if err != nil {
 				return err
 			}
 
 			grpcCloser, err := grpcServer.Run()
+			if err != nil {
+				return err
+			}
+			grpcGw, err := auth.NewGateway(ctx, cfg.GRPCServer.Address, ":9091", log)
+			if err != nil {
+				return err
+			}
+			grpcGwCloser, err := grpcGw.Start()
 			if err != nil {
 				return err
 			}
@@ -103,6 +111,7 @@ func NewServeCmd() *cobra.Command {
 			}
 
 			grpcCloser()
+			grpcGwCloser()
 
 			return nil
 		},

@@ -14,7 +14,13 @@ build:
 
 proto:
 	protoc \
+	-I ./api/grpc \
+	-I./third_party/googleapis \
 	--go_out=./pkg/server/grpc/auth --go_opt=paths=source_relative \
 	--go-grpc_out=./pkg/server/grpc/auth --go-grpc_opt=paths=source_relative \
-	-I ./api/grpc \
+	--grpc-gateway_out=./pkg/server/grpc/auth --grpc-gateway_opt=paths=source_relative,generate_unbound_methods=true \
 	./api/grpc/*.proto
+
+
+keys:
+	ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key

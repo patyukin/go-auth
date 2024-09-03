@@ -62,8 +62,8 @@ func (s *grpcGatewaySuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// Set up GRPC server and Gateway
-	grpcAddress := ":9090"
-	s.httpGwAddress = ":9091"
+	grpcAddress := ":2345"
+	s.httpGwAddress = ":2346"
 	authGRPCHandlers := auth.NewAuthHandlers(&s.storage, passwordHasher, s.jwtManager, buildinfo.New())
 	s.grpcServer, err = auth.NewGRPCServer(grpcAddress, authGRPCHandlers, s.log)
 	s.Require().NoError(err)
@@ -91,7 +91,8 @@ func (s *grpcGatewaySuite) TearDownSuite() {
 func (s *grpcGatewaySuite) TestRegisterUser() {
 	registerUserReq := &authpb.RegisterUserRequest{
 		User: &authpb.User{
-			Name: "user1",
+			Name:  "user1",
+			Email: "test@example.com11",
 		},
 		Password: "rLy_5tr0nG!",
 	}
@@ -114,4 +115,30 @@ func (s *grpcGatewaySuite) TestRegisterUser() {
 	s.Require().NoError(err)
 
 	s.Equal(registerResModel.UserId, registerUserReq.User.Name)
+}
+
+func (s *grpcGatewaySuite) TestLoginUser() {
+	loginUserReq := &authpb.LoginUserRequest{
+		LoginMethod: &authpb.LoginUserRequest_Email{Email: "user1"},
+		Password:    "rLy_5tr0nG!",
+	}
+
+	loginUserReqBytes, _ := playground.ProtobufToJSON(loginUserReq)
+
+	resLogin, err := http.Post(fmt.Sprintf("http://localhost%s/api/v1/login", s.httpGwAddress),
+		"application/json",
+		bytes.NewReader(loginUserReqBytes))
+	s.Require().NoError(err)
+	defer resLogin.Body.Close()
+
+	s.Require().Equal(http.StatusOK, resLogin.StatusCode)
+
+	loginResModel := &authpb.LoginUserResponse{}
+	bodyRes, err := io.ReadAll(resLogin.Body)
+	s.Require().NoError(err)
+
+	err = json.Unmarshal(bodyRes, loginResModel)
+	s.Require().NoError(err)
+
+	s.NotEmpty(loginResModel.Token)
 }
